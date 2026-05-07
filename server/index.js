@@ -45,6 +45,46 @@ app.post('/api/leads', async (req, res) => {
   res.json({ success: true, data })
 })
 
+const Anthropic = require('@anthropic-ai/sdk')
+
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+})
+
+app.post('/api/summary', async (req, res) => {
+  const { audits, totalMonthlySavings, totalAnnualSavings, useCase, teamSize } = req.body
+
+  try {
+    const auditText = audits.map(a => 
+      `${a.toolName}: ${a.results.length === 0 ? 'optimal' : a.results.map(r => r.message).join('. ')}`
+    ).join('\n')
+
+    const message = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 200,
+      messages: [{
+        role: 'user',
+        content: `You are an AI spend advisor. Write a 100-word personalized summary for a team of ${teamSize} people whose primary use case is ${useCase}. 
+
+Their audit results are:
+${auditText}
+
+Total potential savings: $${totalMonthlySavings}/month ($${totalAnnualSavings}/year).
+
+Write a friendly, specific, actionable summary. No bullet points. Just a paragraph.`
+      }]
+    })
+
+    res.json({ summary: message.content[0].text })
+  } catch (err) {
+    console.error('Anthropic error:', err)
+    // Fallback summary if API fails
+    res.json({ 
+      summary: `Based on your audit, your team of ${teamSize} could save $${totalMonthlySavings}/month by optimizing your AI tool subscriptions. Review the recommendations above to reduce your annual AI spend by $${totalAnnualSavings}.` 
+    })
+  }
+})
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
