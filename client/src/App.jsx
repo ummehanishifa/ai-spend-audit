@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { runAudit } from './auditEngine'
 
 const TOOLS = [
   { id: 'cursor', name: 'Cursor', plans: ['Hobby', 'Pro', 'Business', 'Enterprise'] },
@@ -11,7 +12,7 @@ const TOOLS = [
 
 const DEFAULT_TOOL = { enabled: false, plan: '', seats: 1, monthlySpend: '' }
 
-function App() {
+export default function App() {
   const [tools, setTools] = useState(() => {
     const saved = localStorage.getItem('auditTools')
     if (saved) return JSON.parse(saved)
@@ -19,18 +20,15 @@ function App() {
     TOOLS.forEach(t => { initial[t.id] = { ...DEFAULT_TOOL } })
     return initial
   })
-
   const [teamSize, setTeamSize] = useState(() => localStorage.getItem('teamSize') || '')
   const [useCase, setUseCase] = useState(() => localStorage.getItem('useCase') || '')
+  const [auditResult, setAuditResult] = useState(null)
+  const [email, setEmail] = useState('')
+  const [emailSubmitted, setEmailSubmitted] = useState(false)
 
-  useEffect(() => {
-    localStorage.setItem('auditTools', JSON.stringify(tools))
-  }, [tools])
-
-  useEffect(() => {
-    localStorage.setItem('teamSize', teamSize)
-    localStorage.setItem('useCase', useCase)
-  }, [teamSize, useCase])
+  useEffect(() => { localStorage.setItem('auditTools', JSON.stringify(tools)) }, [tools])
+  useEffect(() => { localStorage.setItem('teamSize', teamSize) }, [teamSize])
+  useEffect(() => { localStorage.setItem('useCase', useCase) }, [useCase])
 
   const updateTool = (id, field, value) => {
     setTools(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }))
@@ -38,7 +36,129 @@ function App() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    alert('Form submitted! We will build the audit engine next.')
+    const result = runAudit(tools, parseInt(teamSize), useCase)
+    setAuditResult(result)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleEmailSubmit = (e) => {
+    e.preventDefault()
+    setEmailSubmitted(true)
+  }
+
+  if (auditResult) {
+    const { audits, totalMonthlySavings, totalAnnualSavings } = auditResult
+    const isOverspending = totalMonthlySavings > 100
+    const isOptimal = totalMonthlySavings < 100
+
+    return (
+      <div className="min-h-screen bg-gray-950 text-white p-6">
+        <div className="max-w-2xl mx-auto space-y-6">
+
+          {/* Hero */}
+          <div className="text-center py-8">
+            <p className="text-gray-400 text-sm mb-2">YOUR AUDIT RESULTS</p>
+            <h1 className="text-5xl font-black text-green-400 mb-1">
+              ${totalMonthlySavings.toLocaleString()}/mo
+            </h1>
+            <p className="text-gray-300 text-lg">
+              potential savings · <span className="text-green-300 font-semibold">${totalAnnualSavings.toLocaleString()} annually</span>
+            </p>
+          </div>
+
+          {/* Credex CTA for high savings */}
+          {isOverspending && (
+            <div className="bg-green-900 border border-green-500 rounded-xl p-5">
+              <h2 className="text-green-300 font-bold text-lg mb-1">💡 You could save even more with Credex</h2>
+              <p className="text-gray-300 text-sm mb-3">
+                Credex sells discounted AI credits — same tools, lower price. Companies saving $500+/mo typically save an additional 20–40% through credits.
+              </p>
+              
+                href="https://credex.rocks"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-block bg-green-500 hover:bg-green-400 text-black font-bold px-5 py-2 rounded-lg transition"
+              <a>
+                Book a Credex Consultation →
+              </a>
+            </div>
+          )}
+
+          {/* Optimal spending message */}
+          {isOptimal && (
+            <div className="bg-blue-900 border border-blue-500 rounded-xl p-5">
+              <h2 className="text-blue-300 font-bold text-lg mb-1">✅ You're spending well</h2>
+              <p className="text-gray-300 text-sm">
+                Your current AI stack looks optimized. We'll notify you when new savings opportunities apply to your tools.
+              </p>
+            </div>
+          )}
+
+          {/* Per tool breakdown */}
+          {audits.map((audit, i) => (
+            <div key={i} className="bg-gray-900 rounded-xl p-5">
+              <h3 className="font-bold text-lg mb-3">{audit.toolName}</h3>
+              {audit.results.length === 0 ? (
+                <p className="text-gray-400 text-sm">✅ Looking good — no issues found.</p>
+              ) : (
+                audit.results.map((r, j) => (
+                  <div key={j} className="flex items-start gap-3 mb-3">
+                    <span className="text-xl">
+                      {r.type === 'downgrade' ? '⬇️' : r.type === 'warning' ? '⚠️' : 'ℹ️'}
+                    </span>
+                    <div>
+                      <p className="text-sm text-gray-300">{r.message}</p>
+                      {r.saving > 0 && (
+                        <p className="text-green-400 font-semibold text-sm mt-1">
+                          Save ${r.saving}/mo
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          ))}
+
+          {/* Email capture */}
+          {!emailSubmitted ? (
+            <div className="bg-gray-900 rounded-xl p-5">
+              <h3 className="font-bold text-lg mb-1">📬 Get your full report</h3>
+              <p className="text-gray-400 text-sm mb-3">We'll email you a copy and alert you when new savings apply.</p>
+              <form onSubmit={handleEmailSubmit} className="flex gap-2">
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  className="flex-1 bg-gray-800 rounded-lg px-3 py-2 text-white"
+                />
+                <button
+                  type="submit"
+                  className="bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2 rounded-lg transition"
+                >
+                  Send
+                </button>
+              </form>
+            </div>
+          ) : (
+            <div className="bg-gray-900 rounded-xl p-5 text-center">
+              <p className="text-green-400 font-bold">✅ Report sent to {email}</p>
+            </div>
+          )}
+
+          {/* Back button */}
+          <button
+            onClick={() => setAuditResult(null)}
+            className="w-full border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white py-3 rounded-xl transition"
+          >
+            ← Edit my inputs
+          </button>
+
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -48,8 +168,6 @@ function App() {
         <p className="text-gray-400 text-center mb-8">Find out if you're overpaying for AI tools</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-
-          {/* Team Info */}
           <div className="bg-gray-900 rounded-xl p-5 space-y-4">
             <h2 className="text-lg font-semibold">Your Team</h2>
             <div className="flex gap-4">
@@ -82,7 +200,6 @@ function App() {
             </div>
           </div>
 
-          {/* Tools */}
           {TOOLS.map(tool => (
             <div key={tool.id} className="bg-gray-900 rounded-xl p-5">
               <div className="flex items-center gap-3 mb-4">
@@ -93,11 +210,8 @@ function App() {
                   onChange={e => updateTool(tool.id, 'enabled', e.target.checked)}
                   className="w-4 h-4 accent-green-500"
                 />
-                <label htmlFor={tool.id} className="text-lg font-medium cursor-pointer">
-                  {tool.name}
-                </label>
+                <label htmlFor={tool.id} className="text-lg font-medium cursor-pointer">{tool.name}</label>
               </div>
-
               {tools[tool.id].enabled && (
                 <div className="grid grid-cols-3 gap-3">
                   <div>
@@ -143,11 +257,8 @@ function App() {
           >
             Run My Audit →
           </button>
-
         </form>
       </div>
     </div>
   )
 }
-
-export default App
