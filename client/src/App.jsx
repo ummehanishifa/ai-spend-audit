@@ -41,8 +41,24 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const handleEmailSubmit = (e) => {
+  const handleEmailSubmit = async (e) => {
     e.preventDefault()
+    try {
+      await fetch('http://localhost:5000/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          tools,
+          teamSize: parseInt(teamSize),
+          useCase,
+          monthlySavings: auditResult.totalMonthlySavings,
+          annualSavings: auditResult.totalAnnualSavings,
+        })
+      })
+    } catch (err) {
+      console.error('Failed to save lead:', err)
+    }
     setEmailSubmitted(true)
   }
 
