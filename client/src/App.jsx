@@ -25,6 +25,8 @@ export default function App() {
   const [auditResult, setAuditResult] = useState(null)
   const [email, setEmail] = useState('')
   const [emailSubmitted, setEmailSubmitted] = useState(false)
+  const [summary, setSummary] = useState('')
+  const [shareUrl, setShareUrl] = useState('')
 
   useEffect(() => { localStorage.setItem('auditTools', JSON.stringify(tools)) }, [tools])
   useEffect(() => { localStorage.setItem('teamSize', teamSize) }, [teamSize])
@@ -34,17 +36,56 @@ export default function App() {
     setTools(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     const result = runAudit(tools, parseInt(teamSize), useCase)
     setAuditResult(result)
     window.scrollTo({ top: 0, behavior: 'smooth' })
+
+    // Get AI summary
+    try {
+      const res = await fetch('https://ai-spend-audit-8tq2.onrender.com/api/summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          audits: result.audits,
+          totalMonthlySavings: result.totalMonthlySavings,
+          totalAnnualSavings: result.totalAnnualSavings,
+          useCase,
+          teamSize,
+        })
+      })
+      const data = await res.json()
+      setSummary(data.summary)
+    } catch (err) {
+      setSummary(`Your team could save $${result.totalMonthlySavings}/month by optimizing your AI subscriptions.`)
+    }
+
+    // Save audit and get share URL
+    try {
+      const auditRes = await fetch('https://ai-spend-audit-8tq2.onrender.com/api/audits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tools,
+          teamSize: parseInt(teamSize),
+          useCase,
+          monthlySavings: result.totalMonthlySavings,
+          annualSavings: result.totalAnnualSavings,
+          auditResults: result.audits,
+        })
+      })
+      const auditData = await auditRes.json()
+      setShareUrl(`${window.location.origin}/audit/${auditData.shareId}`)
+    } catch (err) {
+      console.error('Failed to save audit:', err)
+    }
   }
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault()
     try {
-      await fetch('http://localhost:5000/api/leads', {
+      await fetch('https://ai-spend-audit-8tq2.onrender.com/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -71,56 +112,59 @@ export default function App() {
       <div className="min-h-screen bg-gray-950 text-white p-6">
         <div className="max-w-2xl mx-auto space-y-6">
 
-          {/* Hero */}
           <div className="text-center py-8">
             <p className="text-gray-400 text-sm mb-2">YOUR AUDIT RESULTS</p>
             <h1 className="text-5xl font-black text-green-400 mb-1">
               ${totalMonthlySavings.toLocaleString()}/mo
             </h1>
             <p className="text-gray-300 text-lg">
-              potential savings · <span className="text-green-300 font-semibold">${totalAnnualSavings.toLocaleString()} annually</span>
+              potential savings &middot; <span className="text-green-300 font-semibold">${totalAnnualSavings.toLocaleString()} annually</span>
             </p>
           </div>
 
-          {/* Credex CTA for high savings */}
+          {summary && (
+            <div className="bg-gray-900 rounded-xl p-5 border border-gray-700">
+              <h3 className="text-sm text-gray-400 mb-2">AI ANALYSIS</h3>
+              <p className="text-gray-200 leading-relaxed">{summary}</p>
+            </div>
+          )}
+
           {isOverspending && (
             <div className="bg-green-900 border border-green-500 rounded-xl p-5">
-              <h2 className="text-green-300 font-bold text-lg mb-1">💡 You could save even more with Credex</h2>
+              <h2 className="text-green-300 font-bold text-lg mb-1">You could save even more with Credex</h2>
               <p className="text-gray-300 text-sm mb-3">
-                Credex sells discounted AI credits — same tools, lower price. Companies saving $500+/mo typically save an additional 20–40% through credits.
+                Credex sells discounted AI credits — same tools, lower price. Companies saving $500+/mo typically save an additional 20-40% through credits.
               </p>
-              
+              <a
                 href="https://credex.rocks"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-block bg-green-500 hover:bg-green-400 text-black font-bold px-5 py-2 rounded-lg transition"
-              <a>
-                Book a Credex Consultation →
+              >
+                Book a Credex Consultation &rarr;
               </a>
             </div>
           )}
 
-          {/* Optimal spending message */}
           {isOptimal && (
             <div className="bg-blue-900 border border-blue-500 rounded-xl p-5">
-              <h2 className="text-blue-300 font-bold text-lg mb-1">✅ You're spending well</h2>
+              <h2 className="text-blue-300 font-bold text-lg mb-1">You are spending well</h2>
               <p className="text-gray-300 text-sm">
-                Your current AI stack looks optimized. We'll notify you when new savings opportunities apply to your tools.
+                Your current AI stack looks optimized. We will notify you when new savings opportunities apply to your tools.
               </p>
             </div>
           )}
 
-          {/* Per tool breakdown */}
           {audits.map((audit, i) => (
             <div key={i} className="bg-gray-900 rounded-xl p-5">
               <h3 className="font-bold text-lg mb-3">{audit.toolName}</h3>
               {audit.results.length === 0 ? (
-                <p className="text-gray-400 text-sm">✅ Looking good — no issues found.</p>
+                <p className="text-gray-400 text-sm">Looking good — no issues found.</p>
               ) : (
                 audit.results.map((r, j) => (
                   <div key={j} className="flex items-start gap-3 mb-3">
                     <span className="text-xl">
-                      {r.type === 'downgrade' ? '⬇️' : r.type === 'warning' ? '⚠️' : 'ℹ️'}
+                      {r.type === 'downgrade' ? 'down' : r.type === 'warning' ? 'warn' : 'info'}
                     </span>
                     <div>
                       <p className="text-sm text-gray-300">{r.message}</p>
@@ -136,11 +180,10 @@ export default function App() {
             </div>
           ))}
 
-          {/* Email capture */}
           {!emailSubmitted ? (
             <div className="bg-gray-900 rounded-xl p-5">
-              <h3 className="font-bold text-lg mb-1">📬 Get your full report</h3>
-              <p className="text-gray-400 text-sm mb-3">We'll email you a copy and alert you when new savings apply.</p>
+              <h3 className="font-bold text-lg mb-1">Get your full report</h3>
+              <p className="text-gray-400 text-sm mb-3">We will email you a copy and alert you when new savings apply.</p>
               <form onSubmit={handleEmailSubmit} className="flex gap-2">
                 <input
                   type="email"
@@ -160,16 +203,34 @@ export default function App() {
             </div>
           ) : (
             <div className="bg-gray-900 rounded-xl p-5 text-center">
-              <p className="text-green-400 font-bold">✅ Report sent to {email}</p>
+              <p className="text-green-400 font-bold">Report sent to {email}</p>
             </div>
           )}
 
-          {/* Back button */}
+          {shareUrl && (
+            <div className="bg-gray-900 rounded-xl p-5">
+              <h3 className="font-bold text-lg mb-2">Share your audit</h3>
+              <div className="flex gap-2">
+                <input
+                  readOnly
+                  value={shareUrl}
+                  className="flex-1 bg-gray-800 rounded-lg px-3 py-2 text-gray-300 text-sm"
+                />
+                <button
+                  onClick={() => navigator.clipboard.writeText(shareUrl)}
+                  className="bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition"
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+          )}
+
           <button
             onClick={() => setAuditResult(null)}
             className="w-full border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white py-3 rounded-xl transition"
           >
-            ← Edit my inputs
+            &larr; Edit my inputs
           </button>
 
         </div>
@@ -181,7 +242,7 @@ export default function App() {
     <div className="min-h-screen bg-gray-950 text-white p-6">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold text-center mb-2">AI Spend Audit</h1>
-        <p className="text-gray-400 text-center mb-8">Find out if you're overpaying for AI tools</p>
+        <p className="text-gray-400 text-center mb-8">Find out if you are overpaying for AI tools</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-gray-900 rounded-xl p-5 space-y-4">
@@ -271,7 +332,7 @@ export default function App() {
             type="submit"
             className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition"
           >
-            Run My Audit →
+            Run My Audit &rarr;
           </button>
         </form>
       </div>
