@@ -85,6 +85,50 @@ Write a friendly, specific, actionable summary. No bullet points. Just a paragra
   }
 })
 
+// Save audit and return share ID
+app.post('/api/audits', async (req, res) => {
+  const { tools, teamSize, useCase, monthlySavings, annualSavings, auditResults } = req.body
+
+  const shareId = Math.random().toString(36).substring(2, 10)
+
+  const { data, error } = await supabase
+    .from('audits')
+    .insert([{
+      share_id: shareId,
+      tools,
+      team_size: teamSize,
+      use_case: useCase,
+      monthly_savings: monthlySavings,
+      annual_savings: annualSavings,
+      audit_results: auditResults,
+    }])
+    .select()
+
+  if (error) {
+    console.error('Supabase error:', error)
+    return res.status(500).json({ error: 'Failed to save audit' })
+  }
+
+  res.json({ shareId })
+})
+
+// Get audit by share ID
+app.get('/api/audits/:shareId', async (req, res) => {
+  const { shareId } = req.params
+
+  const { data, error } = await supabase
+    .from('audits')
+    .select('*')
+    .eq('share_id', shareId)
+    .single()
+
+  if (error || !data) {
+    return res.status(404).json({ error: 'Audit not found' })
+  }
+
+  res.json(data)
+})
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
