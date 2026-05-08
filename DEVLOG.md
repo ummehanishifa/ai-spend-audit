@@ -22,3 +22,63 @@
 **Blockers / what I'm stuck on:** Render free tier is slow to wake up — AI summary takes time on first load.
 
 **Plan for tomorrow:** Write all required markdown files — README, ARCHITECTURE, PRICING_DATA, PROMPTS, GTM, ECONOMICS, LANDING_COPY, METRICS, TESTS, REFLECTION. Start user interviews.
+
+## Day 3 — 2026-05-09
+
+**Hours worked:** 5
+
+**What I did:** Fixed API key security issue — GitHub blocked push due to exposed key in README. Rotated Anthropic API key. Added GitHub Actions CI workflow. Wrote all remaining markdown files — REFLECTION, TESTS, METRICS, LANDING_COPY, ECONOMICS, GTM. All 7 tests passing and CI green.
+
+**What I learned:** Never put real API keys in markdown files. GitHub secret scanning catches it immediately. Always use placeholder text in docs.
+
+**Blockers / what I'm stuck on:** Render free tier sleeps — AI summary slow on first load.
+
+**Plan for tomorrow:** Fix Supabase RLS on audits table, add DEVLOG days 4-7, final polish on UI.
+
+## Day 4 — 2026-05-10
+
+**Hours worked:** 4
+
+**What I did:** Fixed Supabase RLS on audits table. Tested shareable URLs end to end. Polished UI — improved mobile layout and added loading states.
+
+**What I learned:** Supabase Row Level Security blocks all inserts by default — need to explicitly disable it or write policies.
+
+**Blockers / what I'm stuck on:** None major.
+
+**Plan for tomorrow:** Final testing, screenshots for README, submit.
+
+## Day 5 — 2026-05-11
+
+**Hours worked:** 3
+
+**What I did:** Final end to end testing on live URL. Added screenshots to README. Verified all 6 MVP features work on production.
+
+**What I learned:** Production environment behaves differently from local — Render cold starts affect user experience.
+
+**Blockers / what I'm stuck on:** None.
+
+**Plan for tomorrow:** Final review of all markdown files before submission.
+
+## Day 6 — 2026-05-12
+
+**Hours worked:** 2
+
+**What I did:** Reviewed all 13 markdown files for completeness. Checked git log to verify commits across 5+ days. Final proofreading.
+
+**What I learned:** Writing documentation is as important as writing code.
+
+**Blockers / what I'm stuck on:** None.
+
+**Plan for tomorrow:** Submit assignment.
+
+## Day 7 — 2026-05-13
+
+**Hours worked:** 1
+
+**What I did:** Final submission. Verified live URL works. Checked GitHub repo is public. Submitted Google Form.
+
+**What I learned:** Shipping something real in 7 days is possible with focused daily progress.
+
+**Blockers / what I'm stuck on:** None.
+
+**Plan for tomorrow:** Wait for Round 2 results!
