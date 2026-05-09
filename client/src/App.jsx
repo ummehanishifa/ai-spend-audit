@@ -27,6 +27,7 @@ export default function App() {
   const [emailSubmitted, setEmailSubmitted] = useState(false)
   const [summary, setSummary] = useState('')
   const [shareUrl, setShareUrl] = useState('')
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => { localStorage.setItem('auditTools', JSON.stringify(tools)) }, [tools])
   useEffect(() => { localStorage.setItem('teamSize', teamSize) }, [teamSize])
@@ -38,11 +39,11 @@ export default function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setLoading(true)
     const result = runAudit(tools, parseInt(teamSize), useCase)
     setAuditResult(result)
     window.scrollTo({ top: 0, behavior: 'smooth' })
 
-    // Get AI summary
     try {
       const res = await fetch('https://ai-spend-audit-8tq2.onrender.com/api/summary', {
         method: 'POST',
@@ -58,10 +59,9 @@ export default function App() {
       const data = await res.json()
       setSummary(data.summary)
     } catch (err) {
-      setSummary(`Your team could save $${result.totalMonthlySavings}/month by optimizing your AI subscriptions.`)
+      setSummary('Your team could save money by optimizing your AI subscriptions. Review the recommendations above.')
     }
 
-    // Save audit and get share URL
     try {
       const auditRes = await fetch('https://ai-spend-audit-8tq2.onrender.com/api/audits', {
         method: 'POST',
@@ -80,6 +80,8 @@ export default function App() {
     } catch (err) {
       console.error('Failed to save audit:', err)
     }
+
+    setLoading(false)
   }
 
   const handleEmailSubmit = async (e) => {
@@ -330,9 +332,10 @@ export default function App() {
 
           <button
             type="submit"
-            className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition"
+            disabled={loading}
+            className="w-full bg-green-600 hover:bg-green-500 disabled:bg-gray-600 text-white font-bold py-3 rounded-xl transition"
           >
-            Run My Audit &rarr;
+            {loading ? 'Analysing your stack...' : 'Run My Audit'}
           </button>
         </form>
       </div>
