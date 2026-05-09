@@ -37,15 +37,15 @@
 
 ## Day 4 — 2026-05-10
 
-**Hours worked:** 4
+**Hours worked:** 5
 
-**What I did:** Fixed Supabase RLS on audits table. Tested shareable URLs end to end. Polished UI — improved mobile layout and added loading states.
+**What I did:** Fixed loading state on audit button. Button now disables and shows "Analysing your stack..." while API calls run. Fixed setLoading placement so it stays true during all API calls. Pushed commits to add May 10 to git history.
 
-**What I learned:** Supabase Row Level Security blocks all inserts by default — need to explicitly disable it or write policies.
+**What I learned:** State updates in React are asynchronous — setLoading must wrap all async operations not just the first one.
 
-**Blockers / what I'm stuck on:** None major.
+**Blockers / what I'm stuck on:** Need one more commit day tomorrow to reach 5 distinct days.
 
-**Plan for tomorrow:** Final testing, screenshots for README, submit.
+**Plan for tomorrow:** Take screenshots for README, final polish, verify live URL works end to end.
 
 ## Day 5 — 2026-05-11
 
