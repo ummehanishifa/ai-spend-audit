@@ -49,36 +49,12 @@
 
 ## Day 5 — 2026-05-11
 
-**Hours worked:** 3
+**Hours worked:** 4
 
-**What I did:** Final end to end testing on live URL. Added screenshots to README. Verified all 6 MVP features work on production.
+**What I did:** Added screenshots to README. Fixed emoji icons showing as text in audit results. Took screenshots of live app on Vercel. Final testing on production URL — all 6 MVP features working end to end. Verified CI is green on GitHub Actions.
 
-**What I learned:** Production environment behaves differently from local — Render cold starts affect user experience.
+**What I learned:** Emoji characters in JSX can sometimes get stripped during copy-paste — need to verify they render correctly on the live site.
 
-**Blockers / what I'm stuck on:** None.
+**Blockers / what I'm stuck on:** None — app is working end to end.
 
-**Plan for tomorrow:** Final review of all markdown files before submission.
-
-## Day 6 — 2026-05-12
-
-**Hours worked:** 2
-
-**What I did:** Reviewed all 13 markdown files for completeness. Checked git log to verify commits across 5+ days. Final proofreading.
-
-**What I learned:** Writing documentation is as important as writing code.
-
-**Blockers / what I'm stuck on:** None.
-
-**Plan for tomorrow:** Submit assignment.
-
-## Day 7 — 2026-05-13
-
-**Hours worked:** 1
-
-**What I did:** Final submission. Verified live URL works. Checked GitHub repo is public. Submitted Google Form.
-
-**What I learned:** Shipping something real in 7 days is possible with focused daily progress.
-
-**Blockers / what I'm stuck on:** None.
-
-**Plan for tomorrow:** Wait for Round 2 results!
+**Plan for tomorrow:** Final review of all files, submit the assignment.
