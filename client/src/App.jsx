@@ -166,7 +166,7 @@ export default function App() {
                 audit.results.map((r, j) => (
                   <div key={j} className="flex items-start gap-3 mb-3">
                     <span className="text-xl">
-                      {r.type === 'downgrade' ? 'down' : r.type === 'warning' ? 'warn' : 'info'}
+                      {r.type === 'downgrade' ? '⬇️' : r.type === 'warning' ? '⚠️' : 'ℹ️'}
                     </span>
                     <div>
                       <p className="text-sm text-gray-300">{r.message}</p>

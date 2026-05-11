@@ -76,3 +76,5 @@ Five key trade-offs I made during this build:
 
 - Frontend: Vercel — connect GitHub repo, set root directory to `client`
 - Backend: Render — connect GitHub repo, set root directory to `server`, add environment variables
+![alt text](screencapture-localhost-5173-2026-05-11-12_41_21.png)
+![alt text](screencapture-localhost-5173-2026-05-11-12_40_39.png)
